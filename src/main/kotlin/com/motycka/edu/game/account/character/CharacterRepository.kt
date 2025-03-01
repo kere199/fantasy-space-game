@@ -1,125 +1,157 @@
 package com.motycka.edu.game.account.character
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.stereotype.Repository
+import java.sql.Statement
+
+
+private val logger = KotlinLogging.logger {}
 
 @Repository
 class CharacterRepository(private val jdbcTemplate: JdbcTemplate) {
 
-    fun getAllCharacters(classType: String?, name: String?): List<CharacterDTO> {
+    fun getAllCharacters(classType: String?, name: String?): List<Character> {
         val sql = buildString {
             append("SELECT * FROM character ")
             if (classType != null || name != null) {
                 append("WHERE ")
-                if (classType != null) append("class = ? ")
-                if (name != null) {
-                    if (classType != null) append("AND ")
-                    append("name LIKE ? ")
-                }
+                val conditions = mutableListOf<String>()
+                if (classType != null) conditions.add("class = ?")
+                if (name != null) conditions.add("name LIKE ?")
+                append(conditions.joinToString(" AND "))
             }
         }
 
-        return jdbcTemplate.query(sql, listOfNotNull(classType, name).toTypedArray()) { rs, _ ->
-            CharacterDTO(
+        val params = listOfNotNull(
+            classType,
+            if (name != null) "%$name%" else null
+        ).toTypedArray()
+
+        return jdbcTemplate.query(sql, params) { rs, _ ->
+            Character(
                 id = rs.getLong("id"),
+                accountId = rs.getLong("account_id"),
                 name = rs.getString("name"),
+                characterClass = rs.getString("class"),
                 health = rs.getInt("health"),
                 attack = rs.getInt("attack"),
-                mana = rs.getObject("mana") as? Int,
-                healing = rs.getObject("healing") as? Int,
-                stamina = rs.getObject("stamina") as? Int,
-                defense = rs.getObject("defense") as? Int,
                 experience = rs.getInt("experience"),
-                classType = rs.getString("class")
+                defense = rs.getObject("defense") as? Int,
+                stamina = rs.getObject("stamina") as? Int,
+                healing = rs.getObject("healing") as? Int,
+                mana = rs.getObject("mana") as? Int,
+                level = rs.getInt("level")
             )
         }
     }
 
-    fun getCharacterById(id: Long): CharacterDTO? {
+    fun getCharacterById(id: Long): Character? {
         val sql = "SELECT * FROM character WHERE id = ?"
-        return jdbcTemplate.queryForObject(sql, arrayOf(id)) { rs, _ ->
-            CharacterDTO(
+        val characters = jdbcTemplate.query(sql, arrayOf(id)) { rs, _ ->
+            Character(
                 id = rs.getLong("id"),
+                accountId = rs.getLong("account_id"),
                 name = rs.getString("name"),
+                characterClass = rs.getString("class"),
                 health = rs.getInt("health"),
                 attack = rs.getInt("attack"),
-                mana = rs.getObject("mana") as? Int,
-                healing = rs.getObject("healing") as? Int,
-                stamina = rs.getObject("stamina") as? Int,
-                defense = rs.getObject("defense") as? Int,
                 experience = rs.getInt("experience"),
-                classType = rs.getString("class")
+                defense = rs.getObject("defense") as? Int,
+                stamina = rs.getObject("stamina") as? Int,
+                healing = rs.getObject("healing") as? Int,
+                mana = rs.getObject("mana") as? Int,
+                level = rs.getInt("level")
             )
         }
+        return characters.firstOrNull()
     }
 
-    fun getChallengers(accountId: Long): List<CharacterDTO> {
+    fun getChallengers(accountId: Long): List<Character> {
         val sql = "SELECT * FROM character WHERE account_id = ?"
         return jdbcTemplate.query(sql, arrayOf(accountId)) { rs, _ ->
-            CharacterDTO(
+            Character(
                 id = rs.getLong("id"),
+                accountId = rs.getLong("account_id"),
                 name = rs.getString("name"),
+                characterClass = rs.getString("class"),
                 health = rs.getInt("health"),
                 attack = rs.getInt("attack"),
-                mana = rs.getObject("mana") as? Int,
-                healing = rs.getObject("healing") as? Int,
-                stamina = rs.getObject("stamina") as? Int,
-                defense = rs.getObject("defense") as? Int,
                 experience = rs.getInt("experience"),
-                classType = rs.getString("class")
+                defense = rs.getObject("defense") as? Int,
+                stamina = rs.getObject("stamina") as? Int,
+                healing = rs.getObject("healing") as? Int,
+                mana = rs.getObject("mana") as? Int,
+                level = rs.getInt("level")
             )
         }
     }
 
-    fun getOpponents(accountId: Long): List<CharacterDTO> {
+    fun getOpponents(accountId: Long): List<Character> {
         val sql = "SELECT * FROM character WHERE account_id != ?"
         return jdbcTemplate.query(sql, arrayOf(accountId)) { rs, _ ->
-            CharacterDTO(
+            Character(
                 id = rs.getLong("id"),
+                accountId = rs.getLong("account_id"),
                 name = rs.getString("name"),
+                characterClass = rs.getString("class"),
                 health = rs.getInt("health"),
                 attack = rs.getInt("attack"),
-                mana = rs.getObject("mana") as? Int,
-                healing = rs.getObject("healing") as? Int,
-                stamina = rs.getObject("stamina") as? Int,
-                defense = rs.getObject("defense") as? Int,
                 experience = rs.getInt("experience"),
-                classType = rs.getString("class")
+                defense = rs.getObject("defense") as? Int,
+                stamina = rs.getObject("stamina") as? Int,
+                healing = rs.getObject("healing") as? Int,
+                mana = rs.getObject("mana") as? Int,
+                level = rs.getInt("level")
             )
         }
     }
 
-    fun updateCharacter(id: Long, character: CharacterDTO): Int {
+    fun updateCharacter(id: Long, character: Character): Int {
         val sql = """
             UPDATE character SET 
             name = ?, health = ?, attack = ?, mana = ?, healing = ?, 
-            stamina = ?, defense = ?, experience = ? WHERE id = ?
+            stamina = ?, defense = ?, experience = ?, level = ? 
+            WHERE id = ?
         """.trimIndent()
 
         return jdbcTemplate.update(
             sql,
             character.name, character.health, character.attack, character.mana, character.healing,
-            character.stamina, character.defense, character.experience, id
+            character.stamina, character.defense, character.experience, character.level, id
         )
     }
 
-    fun saveCharacter(character: CharacterDTO, accountId: Long) {
+    fun saveCharacter(character: Character): Long {
         val sql = """
-            INSERT INTO character (account_id, name, health, attack, stamina, defense, mana, healing, class) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO character (account_id, name, class, health, attack, stamina, defense, mana, healing, experience, level) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
-        jdbcTemplate.update(
-            sql,
-            accountId,
-            character.name,
-            character.health,
-            character.attack,
-            character.stamina,
-            character.defense,
-            character.mana,
-            character.healing,
-            character.classType
-        )
+        val keyHolder = GeneratedKeyHolder()
+
+        try {
+            jdbcTemplate.update({ connection ->
+                val ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+                ps.setLong(1, character.accountId)
+                ps.setString(2, character.name)
+                ps.setString(3, character.characterClass)
+                ps.setInt(4, character.health)
+                ps.setInt(5, character.attack)
+                ps.setObject(6, character.stamina)
+                ps.setObject(7, character.defense)
+                ps.setObject(8, character.mana)
+                ps.setObject(9, character.healing)
+                ps.setInt(10, character.experience)
+                ps.setInt(11, character.level)
+                ps
+            }, keyHolder)
+        } catch (e: Exception) {
+            logger.error { "Failed to save character: ${e.message}" }
+            throw e
+        }
+
+        return keyHolder.key?.toLong() ?: throw RuntimeException("Failed to retrieve generated ID")
     }
 }

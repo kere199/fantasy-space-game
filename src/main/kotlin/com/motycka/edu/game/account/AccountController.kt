@@ -1,40 +1,28 @@
 package com.motycka.edu.game.account
 
-import com.motycka.edu.game.account.rest.AccountRegistrationRequest
-import com.motycka.edu.game.account.rest.AccountResponse
-import com.motycka.edu.game.account.rest.toAccount
-import com.motycka.edu.game.account.rest.toAccountResponse
-import org.springframework.http.HttpStatus
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
-/**
- * This is example of a controller class that handles HTTP requests for the account resource with service dependency injection.
- */
+
+private val logger = KotlinLogging.logger {}
+
 @RestController
 @RequestMapping("/api/accounts")
-class AccountController(
-    private val accountService: AccountService
-) {
-
-    @GetMapping
-    fun getAccount(): AccountResponse {
-        return accountService.getAccount().toAccountResponse()
-    }
+class AccountController(private val accountService: AccountService) {
 
     @PostMapping
-    fun postAccount(
-        @RequestBody account: AccountRegistrationRequest
-    ): ResponseEntity<AccountResponse?> {
-        val response = accountService.createAccount(
-            account = account.toAccount()
-        ).toAccountResponse()
-        return ResponseEntity.status(HttpStatus.CREATED).body(response)
+    fun registerAccount(@RequestBody request: AccountRegistrationRequest): ResponseEntity<Any> {
+        logger.info { "Registering account: $request" }
+        return try {
+            val account = accountService.registerAccount(request)
+            ResponseEntity.ok(account)
+        } catch (e: IllegalArgumentException) {
+            logger.error(e) { "Validation failure: ${e.message}" }
+            ResponseEntity.badRequest().body(mapOf("error" to "Validation failed: ${e.message}"))
+        } catch (e: Exception) {
+            logger.error(e) { "Internal server error: ${e.message}" }
+            ResponseEntity.status(500).body(mapOf("error" to "Internal server error: ${e.message}"))
+        }
     }
-
 }

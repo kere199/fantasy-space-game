@@ -18,7 +18,8 @@ create table if not exists character
     defense int,
     stamina int,
     healing int,
-    mana int
+    mana int,
+    level int not null default 1
 );
 
 create table if not exists leaderboard

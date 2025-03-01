@@ -1,5 +1,7 @@
 package com.motycka.edu.game.account.rest
 
+import com.motycka.edu.game.account.AccountRegistrationRequest
+import com.motycka.edu.game.account.AccountResponse
 import com.motycka.edu.game.account.model.Account
 
 /**
@@ -16,6 +18,5 @@ fun AccountRegistrationRequest.toAccount() = Account(
 fun Account.toAccountResponse() = AccountResponse(
     id = requireNotNull(id) { "Account id must not be null" },
     name = name,
-    username = username,
-    password = "***" // we don't want to expose the password in the response
+    username = username
 )
