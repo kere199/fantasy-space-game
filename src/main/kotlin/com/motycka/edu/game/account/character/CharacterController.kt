@@ -37,4 +37,14 @@ class CharacterController(private val characterService: CharacterService) {
     ): ResponseEntity<CharacterDTO> {
         return ResponseEntity.ok(characterService.levelUpCharacter(id, updatedCharacter))
     }
+
+    @PostMapping
+    fun createCharacter(@RequestBody character: CharacterDTO): ResponseEntity<String> {
+        return try {
+            characterService.createCharacter(character)
+            ResponseEntity.ok("Character created successfully")
+        } catch (e: Exception) {
+            ResponseEntity.badRequest().body("Error creating character: ${e.message}")
+        }
+    }
 }

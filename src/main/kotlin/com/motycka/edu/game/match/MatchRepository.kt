@@ -27,13 +27,14 @@ class MatchRepository(private val jdbcTemplate: JdbcTemplate) {
         return jdbcTemplate.queryForObject(sql, arrayOf(characterId)) { rs, _ ->
             CharacterDTO(
                 id = rs.getLong("id"),
+//                accountId = rs.getLong("account_id"),
                 name = rs.getString("name"),
                 health = rs.getInt("health"),
                 attack = rs.getInt("attack"),
                 mana = rs.getObject("mana") as? Int,
                 healing = rs.getObject("healing") as? Int,
-                stamina = rs.getObject("stamina") as? Int,
-                defense = rs.getObject("defense") as? Int,
+                stamina = rs.getObject("stamina") as Int,
+                defense = rs.getObject("defense") as Int,
                 experience = rs.getInt("experience"),
                 classType = rs.getString("class")
             )

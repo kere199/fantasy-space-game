@@ -1,7 +1,6 @@
 package com.motycka.edu.game.account.character
 
 import com.motycka.edu.game.account.AccountService
-import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 
 @Service
@@ -19,37 +18,22 @@ class CharacterService(
     }
 
     fun getChallengers(): List<CharacterDTO> {
-        val userId = accountService.getCurrentAccountId()
-        return characterRepository.getChallengers(userId)
+        val accountId = accountService.getCurrentAccountId()
+        return characterRepository.getChallengers(accountId)
     }
 
     fun getOpponents(): List<CharacterDTO> {
-        val userId = accountService.getCurrentAccountId()
-        return characterRepository.getOpponents(userId)
+        val accountId = accountService.getCurrentAccountId()
+        return characterRepository.getOpponents(accountId)
     }
 
-    @Transactional
     fun levelUpCharacter(id: Long, updatedCharacter: CharacterDTO): CharacterDTO {
-        val userId = accountService.getCurrentAccountId()
-        val character = characterRepository.getCharacterById(id)
-            ?: throw IllegalArgumentException("Character not found")
+        characterRepository.updateCharacter(id, updatedCharacter)
+        return updatedCharacter
+    }
 
-        if (characterRepository.getChallengers(userId).none { it.id == id }) {
-            throw IllegalAccessException("You can only update your own characters")
-        }
-
-        val leveledUpCharacter = character.copy(
-            name = updatedCharacter.name,
-            health = updatedCharacter.health,
-            attack = updatedCharacter.attack,
-            mana = updatedCharacter.mana,
-            healing = updatedCharacter.healing,
-            stamina = updatedCharacter.stamina,
-            defense = updatedCharacter.defense,
-            experience = character.experience + 100  // Level-up effect
-        )
-
-        characterRepository.updateCharacter(id, leveledUpCharacter)
-        return leveledUpCharacter
+    fun createCharacter(character: CharacterDTO) {
+        val accountId = accountService.getCurrentAccountId()
+        characterRepository.saveCharacter(character, accountId)
     }
 }

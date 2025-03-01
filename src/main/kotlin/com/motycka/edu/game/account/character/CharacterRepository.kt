@@ -1,6 +1,5 @@
 package com.motycka.edu.game.account.character
 
-//import com.example.fantasygame.dto.CharacterDTO
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 
@@ -20,45 +19,7 @@ class CharacterRepository(private val jdbcTemplate: JdbcTemplate) {
             }
         }
 
-
-
-        return jdbcTemplate.query(sql, listOfNotNull(classType,name).toTypedArray()) { rs, _ ->
-            CharacterDTO(
-                id = rs.getLong("id"),
-                name = rs.getString("name"),
-                health = rs.getInt("health"),
-                attack = rs.getInt("attack"),
-                mana = rs.getInt("mana"),
-                healing = rs.getInt("healing"),
-                stamina = rs.getInt("stamina"),
-                defense = rs.getInt("defense"),
-                experience = rs.getInt("experience"),
-                classType = rs.getString("class")
-            )
-        }
-    }
-
-    fun getCharacterById(id: Long): CharacterDTO? {
-        val sql = "SELECT * FROM character WHERE id = ?"
-        return jdbcTemplate.queryForObject(sql, arrayOf(id)) { rs, _ ->
-            CharacterDTO(
-                id = rs.getLong("id"),
-                name = rs.getString("name"),
-                health = rs.getInt("health"),
-                attack = rs.getInt("attack"),
-                mana = rs.getInt("mana"),
-                healing = rs.getInt("healing"),
-                stamina = rs.getInt("stamina"),
-                defense = rs.getInt("defense"),
-                experience = rs.getInt("experience"),
-                classType = rs.getString("class")
-            )
-        }
-    }
-
-    fun getChallengers(userId: Long): List<CharacterDTO> {
-        val sql = "SELECT * FROM character WHERE account_id = ?"
-        return jdbcTemplate.query(sql, arrayOf(userId)) { rs, _ ->
+        return jdbcTemplate.query(sql, listOfNotNull(classType, name).toTypedArray()) { rs, _ ->
             CharacterDTO(
                 id = rs.getLong("id"),
                 name = rs.getString("name"),
@@ -74,9 +35,45 @@ class CharacterRepository(private val jdbcTemplate: JdbcTemplate) {
         }
     }
 
-    fun getOpponents(userId: Long): List<CharacterDTO> {
+    fun getCharacterById(id: Long): CharacterDTO? {
+        val sql = "SELECT * FROM character WHERE id = ?"
+        return jdbcTemplate.queryForObject(sql, arrayOf(id)) { rs, _ ->
+            CharacterDTO(
+                id = rs.getLong("id"),
+                name = rs.getString("name"),
+                health = rs.getInt("health"),
+                attack = rs.getInt("attack"),
+                mana = rs.getObject("mana") as? Int,
+                healing = rs.getObject("healing") as? Int,
+                stamina = rs.getObject("stamina") as? Int,
+                defense = rs.getObject("defense") as? Int,
+                experience = rs.getInt("experience"),
+                classType = rs.getString("class")
+            )
+        }
+    }
+
+    fun getChallengers(accountId: Long): List<CharacterDTO> {
+        val sql = "SELECT * FROM character WHERE account_id = ?"
+        return jdbcTemplate.query(sql, arrayOf(accountId)) { rs, _ ->
+            CharacterDTO(
+                id = rs.getLong("id"),
+                name = rs.getString("name"),
+                health = rs.getInt("health"),
+                attack = rs.getInt("attack"),
+                mana = rs.getObject("mana") as? Int,
+                healing = rs.getObject("healing") as? Int,
+                stamina = rs.getObject("stamina") as? Int,
+                defense = rs.getObject("defense") as? Int,
+                experience = rs.getInt("experience"),
+                classType = rs.getString("class")
+            )
+        }
+    }
+
+    fun getOpponents(accountId: Long): List<CharacterDTO> {
         val sql = "SELECT * FROM character WHERE account_id != ?"
-        return jdbcTemplate.query(sql, arrayOf(userId)) { rs, _ ->
+        return jdbcTemplate.query(sql, arrayOf(accountId)) { rs, _ ->
             CharacterDTO(
                 id = rs.getLong("id"),
                 name = rs.getString("name"),
@@ -103,6 +100,26 @@ class CharacterRepository(private val jdbcTemplate: JdbcTemplate) {
             sql,
             character.name, character.health, character.attack, character.mana, character.healing,
             character.stamina, character.defense, character.experience, id
+        )
+    }
+
+    fun saveCharacter(character: CharacterDTO, accountId: Long) {
+        val sql = """
+            INSERT INTO character (account_id, name, health, attack, stamina, defense, mana, healing, class) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """.trimIndent()
+
+        jdbcTemplate.update(
+            sql,
+            accountId,
+            character.name,
+            character.health,
+            character.attack,
+            character.stamina,
+            character.defense,
+            character.mana,
+            character.healing,
+            character.classType
         )
     }
 }
