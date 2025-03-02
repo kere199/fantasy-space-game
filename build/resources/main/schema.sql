@@ -22,14 +22,6 @@ create table if not exists character
     level int not null default 1
 );
 
-create table if not exists leaderboard
-(
-    character_id bigint not null references character(id) on delete cascade,
-    wins int not null,
-    losses int not null,
-    draws int not null
-);
-
 create table if not exists match
 (
     id bigint auto_increment primary key,
@@ -51,3 +43,10 @@ create table if not exists round
     mana_delta int not null
 );
 
+create table if not exists leaderboard
+(
+    character_id bigint not null references character(id) on delete cascade,
+    wins int not null,
+    losses int not null,
+    draws int not null
+);

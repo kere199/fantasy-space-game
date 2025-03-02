@@ -190,3 +190,14 @@ data class MatchSimulationResult(
     val opponentXp: Int,
     val rounds: List<Round>
 )
+
+fun Character.toSummary(experienceGained: Int): CharacterSummary {
+    return CharacterSummary(
+        id = this.id!!,
+        name = this.name,
+        characterClass = this.characterClass,
+        level = this.level,
+        experienceTotal = this.experience,
+        experienceGained = experienceGained
+    )
+}
