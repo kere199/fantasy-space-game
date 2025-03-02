@@ -1,20 +1,14 @@
 package com.motycka.edu.game.account
 
+import com.motycka.edu.game.account.model.Account
+import com.motycka.edu.game.account.rest.AccountRegistrationRequest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.stereotype.Repository
 import java.sql.Statement
 
-
 private val logger = KotlinLogging.logger {}
-
-data class Account(
-    val id: Long,
-    val name: String,
-    val username: String,
-    val password: String
-)
 
 @Repository
 class AccountRepository(private val jdbcTemplate: JdbcTemplate) {

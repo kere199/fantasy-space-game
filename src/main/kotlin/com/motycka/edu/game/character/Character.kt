@@ -1,10 +1,10 @@
-package com.motycka.edu.game.account.character
+package com.motycka.edu.game.character
 
 data class Character(
     val id: Long? = null,
     val accountId: Long,
     val name: String,
-    val characterClass: String, // Maps to "class" column in the database
+    val characterClass: String,
     val health: Int,
     val attack: Int,
     val experience: Int,

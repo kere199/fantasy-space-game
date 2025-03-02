@@ -1,5 +1,7 @@
 package com.motycka.edu.game.account
 
+import com.motycka.edu.game.account.model.Account
+import com.motycka.edu.game.account.rest.AccountRegistrationRequest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
@@ -19,11 +21,10 @@ class AccountService(private val accountRepository: AccountRepository) {
         return accountId
     }
 
-    fun registerAccount(request: AccountRegistrationRequest): AccountResponse {
+    fun registerAccount(request: AccountRegistrationRequest): Account {
         request.validate()
         logger.info { "Validated account registration request: ${request.username}" }
 
-        // Check if username already exists
         if (accountRepository.findAccountByUsername(request.username) != null) {
             throw IllegalArgumentException("Username '${request.username}' is already taken")
         }
@@ -31,10 +32,11 @@ class AccountService(private val accountRepository: AccountRepository) {
         val accountId = accountRepository.saveAccount(request)
         logger.info { "Registered new account with ID: $accountId" }
 
-        return AccountResponse(
+        return Account(
             id = accountId,
             name = request.name,
-            username = request.username
+            username = request.username,
+            password = request.password
         )
     }
 }

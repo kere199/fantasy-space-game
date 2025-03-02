@@ -22,7 +22,7 @@ class SecurityConfig(private val accountRepository: AccountRepository) {
         http
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers("/api/accounts").permitAll() // Allow unauthenticated access to register
+                    .requestMatchers("/api/accounts").permitAll()
                     .requestMatchers("/api/characters/**").authenticated()
                     .anyRequest().permitAll()
             }
@@ -39,7 +39,7 @@ class SecurityConfig(private val accountRepository: AccountRepository) {
             val account = accountRepository.findAccountByUsername(username)
                 ?: throw UsernameNotFoundException("User not found: $username")
             User.withUsername(account.username)
-                .password("{noop}${account.password}") // {noop} for plain text passwords
+                .password("{noop}${account.password}")
                 .roles("USER")
                 .build()
         }

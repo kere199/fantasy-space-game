@@ -1,9 +1,10 @@
-package com.motycka.edu.game.account.character
+package com.motycka.edu.game.character
 
+import com.motycka.edu.game.account.rest.CharacterRegistrationRequest
+import com.motycka.edu.game.account.rest.CharacterResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-
 
 private val logger = KotlinLogging.logger {}
 
@@ -15,50 +16,56 @@ class CharacterController(private val characterService: CharacterService) {
     fun getAllCharacters(
         @RequestParam("class", required = false) classType: String?,
         @RequestParam(required = false) name: String?
-    ): ResponseEntity<List<CharacterResponseDTO>> {
+    ): ResponseEntity<List<CharacterResponse>> {
+        logger.info { "Fetching all characters with classType: $classType, name: $name" }
         val characters = characterService.getAllCharacters(classType, name)
-        return ResponseEntity.ok(characters.map { it.toResponseDTO() })
+        return ResponseEntity.ok(characters)
     }
 
     @GetMapping("/{id}")
-    fun getCharacterById(@PathVariable id: Long): ResponseEntity<CharacterResponseDTO> {
+    fun getCharacterById(@PathVariable id: Long): ResponseEntity<CharacterResponse> {
+        logger.info { "Fetching character with ID: $id" }
         val character = characterService.getCharacterById(id)
         return if (character != null) {
-            ResponseEntity.ok(character.toResponseDTO())
+            ResponseEntity.ok(character)
         } else {
             ResponseEntity.notFound().build()
         }
     }
 
     @GetMapping("/challengers")
-    fun getChallengers(): ResponseEntity<List<CharacterResponseDTO>> {
-        return ResponseEntity.ok(characterService.getChallengers().map { it.toResponseDTO() })
+    fun getChallengers(): ResponseEntity<List<CharacterResponse>> {
+        logger.info { "Fetching challengers" }
+        return ResponseEntity.ok(characterService.getChallengers())
     }
 
     @GetMapping("/opponents")
-    fun getOpponents(): ResponseEntity<List<CharacterResponseDTO>> {
-        return ResponseEntity.ok(characterService.getOpponents().map { it.toResponseDTO() })
+    fun getOpponents(): ResponseEntity<List<CharacterResponse>> {
+        logger.info { "Fetching opponents" }
+        return ResponseEntity.ok(characterService.getOpponents())
     }
 
     @PutMapping("/{id}")
     fun levelUpCharacter(
         @PathVariable id: Long,
-        @RequestBody updatedCharacter: CharacterDTO
-    ): ResponseEntity<CharacterResponseDTO> {
+        @RequestBody updatedCharacter: CharacterUpdateRequest
+    ): ResponseEntity<CharacterResponse> {
+        logger.info { "Updating character with ID: $id, data: $updatedCharacter" }
         return try {
             val updated = characterService.levelUpCharacter(id, updatedCharacter)
-            ResponseEntity.ok(updated.toResponseDTO())
+            ResponseEntity.ok(updated)
         } catch (e: IllegalArgumentException) {
+            logger.error(e) { "Validation failure: ${e.message}" }
             ResponseEntity.badRequest().body(null)
         }
     }
 
     @PostMapping
-    fun createCharacter(@RequestBody character: CharacterDTO): ResponseEntity<Any> {
-        logger.info { "Received character: $character" }
+    fun createCharacter(@RequestBody request: CharacterRegistrationRequest): ResponseEntity<Any> {
+        logger.info { "Received character creation request: $request" }
         return try {
-            val createdCharacter = characterService.createCharacter(character)
-            ResponseEntity.ok(createdCharacter.toResponseDTO())
+            val createdCharacter = characterService.createCharacter(request)
+            ResponseEntity.ok(createdCharacter)
         } catch (e: IllegalArgumentException) {
             logger.error(e) { "Validation failure: ${e.message}" }
             ResponseEntity.badRequest().body(mapOf("error" to "Validation failed: ${e.message}"))
@@ -69,23 +76,5 @@ class CharacterController(private val characterService: CharacterService) {
             logger.error(e) { "Internal server error: ${e.message}" }
             ResponseEntity.status(500).body(mapOf("error" to "Internal server error: ${e.message}"))
         }
-    }
-
-    private fun CharacterDTO.toResponseDTO(): CharacterResponseDTO {
-        return CharacterResponseDTO(
-            id = this.id,
-            name = this.name,
-            health = this.health,
-            attackPower = this.attack,
-            stamina = this.stamina,
-            defensePower = this.defense,
-            mana = this.mana,
-            healingPower = this.healing,
-            experience = this.experience,
-            characterClass = this.classType,
-            level = this.level ?: 1,
-            shouldLevelUp = this.shouldLevelUp ?: false,
-            isOwner = this.isOwner ?: false
-        )
     }
 }

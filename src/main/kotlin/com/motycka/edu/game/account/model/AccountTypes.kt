@@ -1,3 +1,7 @@
 package com.motycka.edu.game.account.model
 
-typealias AccountId = Long
+class AccountTypes {
+    companion object {
+        const val ROLE_USER = "USER"
+    }
+}

@@ -1,4 +1,4 @@
-package com.motycka.edu.game.account
+package com.motycka.edu.game.account.rest
 
 data class AccountResponse(
     val id: Long,

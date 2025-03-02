@@ -1,11 +1,10 @@
-package com.motycka.edu.game.account.character
+package com.motycka.edu.game.character
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.stereotype.Repository
 import java.sql.Statement
-
 
 private val logger = KotlinLogging.logger {}
 
@@ -29,6 +28,7 @@ class CharacterRepository(private val jdbcTemplate: JdbcTemplate) {
             if (name != null) "%$name%" else null
         ).toTypedArray()
 
+        logger.info { "Executing getAllCharacters with SQL: $sql, params: ${params.joinToString()}" }
         return jdbcTemplate.query(sql, params) { rs, _ ->
             Character(
                 id = rs.getLong("id"),
@@ -49,6 +49,7 @@ class CharacterRepository(private val jdbcTemplate: JdbcTemplate) {
 
     fun getCharacterById(id: Long): Character? {
         val sql = "SELECT * FROM character WHERE id = ?"
+        logger.info { "Executing getCharacterById with SQL: $sql, id: $id" }
         val characters = jdbcTemplate.query(sql, arrayOf(id)) { rs, _ ->
             Character(
                 id = rs.getLong("id"),
@@ -70,6 +71,7 @@ class CharacterRepository(private val jdbcTemplate: JdbcTemplate) {
 
     fun getChallengers(accountId: Long): List<Character> {
         val sql = "SELECT * FROM character WHERE account_id = ?"
+        logger.info { "Executing getChallengers with SQL: $sql, accountId: $accountId" }
         return jdbcTemplate.query(sql, arrayOf(accountId)) { rs, _ ->
             Character(
                 id = rs.getLong("id"),
@@ -90,6 +92,7 @@ class CharacterRepository(private val jdbcTemplate: JdbcTemplate) {
 
     fun getOpponents(accountId: Long): List<Character> {
         val sql = "SELECT * FROM character WHERE account_id != ?"
+        logger.info { "Executing getOpponents with SQL: $sql, accountId: $accountId" }
         return jdbcTemplate.query(sql, arrayOf(accountId)) { rs, _ ->
             Character(
                 id = rs.getLong("id"),
@@ -116,6 +119,7 @@ class CharacterRepository(private val jdbcTemplate: JdbcTemplate) {
             WHERE id = ?
         """.trimIndent()
 
+        logger.info { "Executing updateCharacter with SQL: $sql, id: $id" }
         return jdbcTemplate.update(
             sql,
             character.name, character.health, character.attack, character.mana, character.healing,
